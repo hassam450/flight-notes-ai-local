@@ -1,0 +1,67 @@
+{
+  "expo": {
+    "name": "Flight Notes AI",
+    "slug": "flight-notes-ai",
+    "version": "1.0.3",
+    "orientation": "portrait",
+    "icon": "./src/assets/images/ic-logo.png",
+    "scheme": "flightnotesai",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.flightnotesai.app",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Flight Notes AI uses your microphone to record flight notes.",
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "flightnotesai"
+            ]
+          }
+        ]
+      }
+    },
+    "android": {
+      "versionCode": 4,
+      "package": "com.flightnotesai.app",
+      "permissions": [
+        "RECORD_AUDIO"
+      ],
+      "adaptiveIcon": {
+        "backgroundColor": "#161022",
+        "foregroundImage": "./src/assets/images/ic-logo.png",
+        "monochromeImage": "./src/assets/images/ic-logo.png"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./src/assets/images/ic-logo.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./src/assets/images/ic-logo.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#161022",
+          "dark": {
+            "backgroundColor": "#161022"
+          }
+        }
+      ],
+      "expo-secure-store",
+      "./plugins/withAndroidReleaseSigning",
+      "@react-native-google-signin/google-signin",
+      "expo-apple-authentication"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
