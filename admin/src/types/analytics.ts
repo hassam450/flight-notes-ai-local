@@ -36,3 +36,63 @@ export type AnalyticsOverviewMetrics = {
   conversionRate: number;
   trends: Record<AnalyticsOverviewTrendKey, AnalyticsSeriesPoint[]>;
 };
+
+// 5.3 Engagement Metrics
+
+export type SessionDurationBucket = {
+  bucket: string;
+  count: number;
+  percentage: number;
+};
+
+export type SessionSourceBreakdown = {
+  source: string;
+  avgSeconds: number;
+  medianSeconds: number;
+  count: number;
+};
+
+export type SessionDurationData = {
+  generatedAt: string;
+  windowDays: number;
+  distribution: SessionDurationBucket[];
+  bySource: SessionSourceBreakdown[];
+  dailyAvgDuration: AnalyticsSeriesPoint[];
+};
+
+export type RetentionCohort = {
+  cohortWeek: string;
+  cohortSize: number;
+  day1Pct: number;
+  day7Pct: number;
+  day30Pct: number;
+};
+
+export type RetentionCohortData = {
+  generatedAt: string;
+  cohortWeeks: number;
+  cohorts: RetentionCohort[];
+};
+
+// 5.4 Revenue Dashboard
+
+export type MrrTrendData = {
+  generatedAt: string;
+  windowDays: number;
+  currentMrr: number;
+  mrrGrowthPct: number;
+  trend: AnalyticsSeriesPoint[];
+};
+
+export type RevenuePlanBreakdown = {
+  productId: string;
+  activeCount: number;
+  mrr: number;
+  percentage: number;
+};
+
+export type RevenueByPlanData = {
+  generatedAt: string;
+  plans: RevenuePlanBreakdown[];
+  totalMrr: number;
+};

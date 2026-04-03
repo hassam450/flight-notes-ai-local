@@ -6,6 +6,14 @@ import type {
   AnalyticsOverviewRpcResult,
   AnalyticsOverviewTrendKey,
   AnalyticsSeriesPoint,
+  MrrTrendData,
+  RetentionCohort,
+  RetentionCohortData,
+  RevenueByPlanData,
+  RevenuePlanBreakdown,
+  SessionDurationBucket,
+  SessionDurationData,
+  SessionSourceBreakdown,
 } from "@/types/analytics";
 
 const OVERVIEW_TREND_KEYS: AnalyticsOverviewTrendKey[] = [
@@ -80,5 +88,156 @@ export async function getAnalyticsOverview(
     paidConvertedUsers: toNumber(result.paid_converted_users),
     conversionRate: toNumber(result.conversion_rate),
     trends,
+  };
+}
+
+// --- 5.3 Engagement Metrics ---
+
+function toString(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+export async function getSessionDurationDistribution(
+  days = 28
+): Promise<SessionDurationData> {
+  const supabase = createServiceRoleClient();
+  const { data, error } = await supabase.rpc(
+    "admin_get_session_duration_distribution",
+    { metric_days: days }
+  );
+
+  if (error) {
+    if (error.message.includes("admin_get_session_duration_distribution")) {
+      throw new Error(
+        "Engagement RPC is missing. Run scripts/task-admin-5.3-engagement-metrics.sql in Supabase."
+      );
+    }
+    throw new Error(
+      `Failed to load session duration data: ${error.message}`
+    );
+  }
+
+  const result = (data ?? {}) as Record<string, unknown>;
+
+  const distribution: SessionDurationBucket[] = Array.isArray(
+    result.distribution
+  )
+    ? result.distribution.map((d: Record<string, unknown>) => ({
+        bucket: toString(d.bucket),
+        count: toNumber(d.count),
+        percentage: toNumber(d.percentage),
+      }))
+    : [];
+
+  const bySource: SessionSourceBreakdown[] = Array.isArray(result.by_source)
+    ? result.by_source.map((s: Record<string, unknown>) => ({
+        source: toString(s.source),
+        avgSeconds: toNumber(s.avg_seconds),
+        medianSeconds: toNumber(s.median_seconds),
+        count: toNumber(s.count),
+      }))
+    : [];
+
+  return {
+    generatedAt: toString(result.generated_at) || new Date().toISOString(),
+    windowDays: toNumber(result.window_days) || days,
+    distribution,
+    bySource,
+    dailyAvgDuration: toSeries(result.daily_avg_duration),
+  };
+}
+
+export async function getRetentionCohorts(
+  weeks = 12
+): Promise<RetentionCohortData> {
+  const supabase = createServiceRoleClient();
+  const { data, error } = await supabase.rpc("admin_get_retention_cohorts", {
+    cohort_weeks: weeks,
+  });
+
+  if (error) {
+    if (error.message.includes("admin_get_retention_cohorts")) {
+      throw new Error(
+        "Retention RPC is missing. Run scripts/task-admin-5.3-engagement-metrics.sql in Supabase."
+      );
+    }
+    throw new Error(`Failed to load retention cohorts: ${error.message}`);
+  }
+
+  const result = (data ?? {}) as Record<string, unknown>;
+
+  const cohorts: RetentionCohort[] = Array.isArray(result.cohorts)
+    ? result.cohorts.map((c: Record<string, unknown>) => ({
+        cohortWeek: toString(c.cohort_week),
+        cohortSize: toNumber(c.cohort_size),
+        day1Pct: toNumber(c.day_1_pct),
+        day7Pct: toNumber(c.day_7_pct),
+        day30Pct: toNumber(c.day_30_pct),
+      }))
+    : [];
+
+  return {
+    generatedAt: toString(result.generated_at) || new Date().toISOString(),
+    cohortWeeks: toNumber(result.cohort_weeks) || weeks,
+    cohorts,
+  };
+}
+
+// --- 5.4 Revenue Dashboard ---
+
+export async function getMrrTrend(days = 90): Promise<MrrTrendData> {
+  const supabase = createServiceRoleClient();
+  const { data, error } = await supabase.rpc("admin_get_mrr_trend", {
+    metric_days: days,
+  });
+
+  if (error) {
+    if (error.message.includes("admin_get_mrr_trend")) {
+      throw new Error(
+        "MRR trend RPC is missing. Run scripts/task-admin-5.4-revenue-dashboard.sql in Supabase."
+      );
+    }
+    throw new Error(`Failed to load MRR trend: ${error.message}`);
+  }
+
+  const result = (data ?? {}) as Record<string, unknown>;
+
+  return {
+    generatedAt: toString(result.generated_at) || new Date().toISOString(),
+    windowDays: toNumber(result.window_days) || days,
+    currentMrr: toNumber(result.current_mrr),
+    mrrGrowthPct: toNumber(result.mrr_growth_pct),
+    trend: toSeries(result.trend),
+  };
+}
+
+export async function getRevenueByPlan(): Promise<RevenueByPlanData> {
+  const supabase = createServiceRoleClient();
+  const { data, error } = await supabase.rpc("admin_get_revenue_by_plan");
+
+  if (error) {
+    if (error.message.includes("admin_get_revenue_by_plan")) {
+      throw new Error(
+        "Revenue by plan RPC is missing. Run scripts/task-admin-5.4-revenue-dashboard.sql in Supabase."
+      );
+    }
+    throw new Error(`Failed to load revenue by plan: ${error.message}`);
+  }
+
+  const result = (data ?? {}) as Record<string, unknown>;
+
+  const plans: RevenuePlanBreakdown[] = Array.isArray(result.plans)
+    ? result.plans.map((p: Record<string, unknown>) => ({
+        productId: toString(p.product_id),
+        activeCount: toNumber(p.active_count),
+        mrr: toNumber(p.mrr),
+        percentage: toNumber(p.percentage),
+      }))
+    : [];
+
+  return {
+    generatedAt: toString(result.generated_at) || new Date().toISOString(),
+    plans,
+    totalMrr: toNumber(result.total_mrr),
   };
 }
