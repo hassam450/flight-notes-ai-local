@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { MetricSparkline } from "@/components/analytics/metric-sparkline";
 import { cn } from "@/lib/utils";
 import { type LucideIcon } from "lucide-react";
 
@@ -10,6 +11,8 @@ interface StatCardProps {
     value: number;
     label: string;
   };
+  sparkline?: number[];
+  footer?: string;
   className?: string;
 }
 
@@ -18,13 +21,15 @@ export function StatCard({
   value,
   icon: Icon,
   trend,
+  sparkline,
+  footer,
   className,
 }: StatCardProps) {
   return (
-    <Card className={cn("", className)}>
-      <CardContent className="pt-0">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
+    <Card className={cn("overflow-hidden", className)}>
+      <CardContent className="space-y-4 pt-0">
+        <div className="flex items-start justify-between gap-3">
+          <div className="space-y-1.5">
             <p className="text-sm text-muted-foreground">{title}</p>
             <p className="text-2xl font-bold">{value}</p>
             {trend && (
@@ -38,11 +43,17 @@ export function StatCard({
                 {trend.value}% {trend.label}
               </p>
             )}
+            {footer && (
+              <p className="text-xs text-muted-foreground">{footer}</p>
+            )}
           </div>
           <div className="rounded-lg bg-primary/10 p-3">
             <Icon className="h-5 w-5 text-primary" />
           </div>
         </div>
+        {sparkline && sparkline.length > 0 && (
+          <MetricSparkline values={sparkline} />
+        )}
       </CardContent>
     </Card>
   );

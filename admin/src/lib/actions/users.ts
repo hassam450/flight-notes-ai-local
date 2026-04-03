@@ -93,7 +93,7 @@ export async function getUsers(
   }
 
   // Map to AdminUserView
-  let mapped: AdminUserView[] = filteredUsers.map((u) => ({
+  const mapped: AdminUserView[] = filteredUsers.map((u) => ({
     id: u.id,
     email: u.email ?? "",
     full_name: (u.user_metadata?.full_name as string) ?? null,
